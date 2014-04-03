@@ -57,12 +57,6 @@ UIColor *bgColor = [[UIColor clearColor] colorWithAlphaComponent:0.5f];
 	//Get screenshot
     UIImage *screenImage = _UICreateScreenUIImage();
 
-	//Get touch location
-	UITouch *touch = [touches anyObject];
-	CGPoint tL = [touch locationInView:self];
-	//Set rect to drag size
-	holeRect = CGRectMake(prevLoc.x, prevLoc.y, tL.x-prevLoc.x, tL.y-prevLoc.y);
-
     //Crop screenshot to rect size
     CGImageRef imageRef = CGImageCreateWithImageInRect([screenImage CGImage], holeRect);
     screenImage = [UIImage imageWithCGImage:imageRef]; 
