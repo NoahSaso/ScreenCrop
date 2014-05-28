@@ -10,7 +10,7 @@ UIColor *bgColor = [[UIColor clearColor] colorWithAlphaComponent:0.5f];
 BOOL isOn = NO;
 DragWindow* selfVar = nil;
 
-@interface SpringBoard
+@interface SpringBoard : NSObject
 - (void)_giveUpOnMenuDoubleTap;
 - (void)cancelMenuButtonRequests;
 @end
@@ -26,13 +26,31 @@ DragWindow* selfVar = nil;
     if(isOn){
         [self _giveUpOnMenuDoubleTap];
         [self cancelMenuButtonRequests];
-        selfVar.backgroundColor = [UIColor clearColor];
-        UIImage *screenImage = _UICreateScreenUIImage();
-        UIImageWriteToSavedPhotosAlbum(screenImage, nil, nil, nil);
-        SBScreenFlash* screenFlash = [%c(SBScreenFlash) sharedInstance];
-        [screenFlash flash];
-        [selfVar remove];
+
+        //Clear whole screen
+        holeRect = [[UIScreen mainScreen] bounds];
+        holeRect.size.width += holeRect.size.width;
+        holeRect.size.height += holeRect.size.height;
+        [dragView setNeedsDisplay];
+
+        //Wait for code above to take affect
+        [self performSelector:@selector(takeIt) withObject:nil afterDelay:0.05];
+
     }else { %orig; }
+}
+
+%new
+- (void)takeIt {
+    //Flash
+    SBScreenFlash* screenFlash = [%c(SBScreenFlash) sharedInstance];
+    [screenFlash flash];
+
+    //Take image
+    UIImage *screenImage = _UICreateScreenUIImage();
+    UIImageWriteToSavedPhotosAlbum(screenImage, nil, nil, nil);
+
+    //Remove from screen
+    [selfVar remove];
 }
 
 %end
@@ -95,9 +113,6 @@ DragWindow* selfVar = nil;
     CGImageRelease(imageRef);
     NSLog(@"[ScreenCrop] Cropped screenshot");
 
-    //Remove gray
-    self.backgroundColor = [UIColor clearColor];
-
     //Save screenshot
     UIImageWriteToSavedPhotosAlbum(screenImage, nil, nil, nil);
     NSLog(@"[ScreenCrop] Wrote screenshot");
@@ -107,13 +122,13 @@ DragWindow* selfVar = nil;
 
 - (void)remove {
     //Remove window from screen
+    dragView.backgroundColor = [UIColor clearColor];
     [dragView removeFromSuperview];
     [self resignKeyWindow];
     [self removeFromSuperview];
-    [self release];
-    NSLog(@"[ScreenCrop] Kicked window from screen");
-
     isOn = NO;
+    NSLog(@"[ScreenCrop] Kicked window from screen");
+    [self release];
 }
 
 @end
