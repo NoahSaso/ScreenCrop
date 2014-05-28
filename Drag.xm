@@ -8,11 +8,6 @@ CGRect holeRect;
 DragView *dragView;
 UIColor *bgColor = [[UIColor clearColor] colorWithAlphaComponent:0.5f];
 
-/*@interface SBScreenShotter
-- (void)finishedWritingScreenshot:(id)screenshot didFinishSavingWithError:(id)error context:(void *)context;
-+ (id)sharedInstance;
-@end*/
-
 @implementation DragWindow
 
 - (id)initWithFrame:(CGRect)frame {
@@ -22,7 +17,6 @@ UIColor *bgColor = [[UIColor clearColor] colorWithAlphaComponent:0.5f];
 		prevLoc = CGPointMake(0,0);
 		//Define the view to drag in
 		dragView = [[DragView alloc] initWithFrame:frame];
-		//dragView.backgroundColor = [UIColor greenColor];
 		dragView.backgroundColor = bgColor;
 		dragView.opaque = NO;
 		//Add drag view to view
@@ -57,15 +51,23 @@ UIColor *bgColor = [[UIColor clearColor] colorWithAlphaComponent:0.5f];
 	//Get screenshot
     UIImage *screenImage = _UICreateScreenUIImage();
 
+    //Double dimensions because of retina
+    CGRect cropRect = holeRect;
+    cropRect.origin.x += cropRect.origin.x;
+    cropRect.origin.y += cropRect.origin.y;
+    cropRect.size.width += cropRect.size.width;
+    cropRect.size.height += cropRect.size.height;
+
     //Crop screenshot to rect size
-    CGImageRef imageRef = CGImageCreateWithImageInRect([screenImage CGImage], holeRect);
+    CGImageRef imageRef = CGImageCreateWithImageInRect(screenImage.CGImage, cropRect);
     screenImage = [UIImage imageWithCGImage:imageRef]; 
     CGImageRelease(imageRef);
     NSLog(@"[ScreenCrop] Cropped screenshot");
 
+    //Remove gray
+    self.backgroundColor = [UIColor clearColor];
+
     //Save screenshot
-    //SBScreenShotter *screenShot = [%c(SBScreenShotter) sharedInstance];
-    //[screenShot finishedWritingScreenshot:screenImage didFinishSavingWithError:nil context:nil];
     UIImageWriteToSavedPhotosAlbum(screenImage, nil, nil, nil);
     NSLog(@"[ScreenCrop] Wrote screenshot");
 
