@@ -3,7 +3,7 @@ ScreenCrop
 
 Cydia tweak for when taking a screenshot, you can select an area to take a picture of instead.
 
-Status
-======
+Instructions
+============
 
-This does *not* work quite yet, and there is no enable switch yet, so don't install it until you see this message gone.
+Take a normal screenshot. A dark window will appear. You can drag the screen to take a screenshot of that area, or press the home button to take a normal screenshot.

@@ -5,13 +5,44 @@ extern "C" UIImage* _UICreateScreenUIImage();
 //Define variables
 CGPoint prevLoc;
 CGRect holeRect;
-DragView *dragView;
+DragView *dragView = nil;
 UIColor *bgColor = [[UIColor clearColor] colorWithAlphaComponent:0.5f];
+BOOL isOn = NO;
+DragWindow* selfVar = nil;
+
+@interface SpringBoard
+- (void)_giveUpOnMenuDoubleTap;
+- (void)cancelMenuButtonRequests;
+@end
+
+@interface SBScreenFlash : NSObject
++ (id)sharedInstance;
+- (void)flash;
+@end
+
+%hook SpringBoard
+
+- (void)_handleMenuButtonEvent {
+    if(isOn){
+        [self _giveUpOnMenuDoubleTap];
+        [self cancelMenuButtonRequests];
+        selfVar.backgroundColor = [UIColor clearColor];
+        UIImage *screenImage = _UICreateScreenUIImage();
+        UIImageWriteToSavedPhotosAlbum(screenImage, nil, nil, nil);
+        SBScreenFlash* screenFlash = [%c(SBScreenFlash) sharedInstance];
+        [screenFlash flash];
+        [selfVar remove];
+    }else { %orig; }
+}
+
+%end
 
 @implementation DragWindow
 
 - (id)initWithFrame:(CGRect)frame {
 	if(self = [super initWithFrame:frame]){
+        isOn = YES;
+        selfVar = self;
 		//Set rect to nothing
 		holeRect = CGRectMake(0,0,0,0);
 		prevLoc = CGPointMake(0,0);
@@ -71,12 +102,18 @@ UIColor *bgColor = [[UIColor clearColor] colorWithAlphaComponent:0.5f];
     UIImageWriteToSavedPhotosAlbum(screenImage, nil, nil, nil);
     NSLog(@"[ScreenCrop] Wrote screenshot");
 
+    [self remove];
+}
+
+- (void)remove {
     //Remove window from screen
     [dragView removeFromSuperview];
     [self resignKeyWindow];
     [self removeFromSuperview];
     [self release];
     NSLog(@"[ScreenCrop] Kicked window from screen");
+
+    isOn = NO;
 }
 
 @end

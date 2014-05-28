@@ -2,4 +2,5 @@
 @end
 
 @interface DragWindow : UIWindow
+- (void)remove;
 @end
