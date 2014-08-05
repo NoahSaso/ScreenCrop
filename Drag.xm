@@ -10,9 +10,9 @@ UIColor *bgColor = [[UIColor clearColor] colorWithAlphaComponent:0.5f];
 BOOL isOn = NO;
 DragWindow* selfVar = nil;
 
-@interface SpringBoard : NSObject
-- (void)_giveUpOnMenuDoubleTap;
+@interface SpringBoard : UIApplication
 - (void)cancelMenuButtonRequests;
+- (void)clearMenuButtonTimer;
 @end
 
 @interface SBScreenFlash : NSObject
@@ -24,7 +24,7 @@ DragWindow* selfVar = nil;
 
 - (void)_handleMenuButtonEvent {
     if(isOn){
-        [self _giveUpOnMenuDoubleTap];
+        [self clearMenuButtonTimer];
         [self cancelMenuButtonRequests];
 
         //Clear whole screen
