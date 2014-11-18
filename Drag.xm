@@ -1,4 +1,5 @@
 #import "Drag.h"
+#import "iOSVersion/iOSVersion.m"
 
 extern "C" UIImage* _UICreateScreenUIImage();
 
@@ -11,18 +12,38 @@ BOOL isOn = NO;
 DragWindow* selfVar = nil;
 
 @interface SpringBoard : UIApplication
-- (void)cancelMenuButtonRequests;
-- (void)clearMenuButtonTimer;
+-(void)cancelMenuButtonRequests;
+-(void)clearMenuButtonTimer;
 @end
 
 @interface SBScreenFlash : NSObject
-+ (id)sharedInstance;
-- (void)flash;
++(id)mySharedInstance;
++(id)sharedInstance;
++(id)mainScreenFlasher;
+-(void)flash;
+-(void)flashWhiteWithCompletion:(id)arg1;
 @end
 
+%hook SBScreenFlash
+%group iOSOther
+%new +(id)mySharedInstance {
+    return [self sharedInstance];
+}
+%end
+%group iOS8
+%new +(id)mySharedInstance {
+    return [self mainScreenFlasher];
+}
+%new -(void)flash {
+    [self flashWhiteWithCompletion:nil];
+}
+%end
+%end
+
+%group All
 %hook SpringBoard
 
-- (void)_handleMenuButtonEvent {
+-(void)_handleMenuButtonEvent {
     if(isOn){
         [self clearMenuButtonTimer];
         [self cancelMenuButtonRequests];
@@ -39,10 +60,9 @@ DragWindow* selfVar = nil;
     }else { %orig; }
 }
 
-%new
-- (void)takeIt {
+%new -(void)takeIt {
     //Flash
-    SBScreenFlash* screenFlash = [%c(SBScreenFlash) sharedInstance];
+    SBScreenFlash* screenFlash = [%c(SBScreenFlash) mySharedInstance];
     [screenFlash flash];
 
     //Take image
@@ -57,7 +77,7 @@ DragWindow* selfVar = nil;
 
 @implementation DragWindow
 
-- (id)initWithFrame:(CGRect)frame {
+-(id)initWithFrame:(CGRect)frame {
 	if(self = [super initWithFrame:frame]){
         isOn = YES;
         selfVar = self;
@@ -74,7 +94,7 @@ DragWindow* selfVar = nil;
 	return self;
 }
 
-- (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
+-(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
 	//Get touch location and set origin point
 	UITouch *touch = [touches anyObject];
 	CGPoint tL = [touch locationInView:self];
@@ -86,7 +106,7 @@ DragWindow* selfVar = nil;
 	[dragView setNeedsDisplay];
 }
 
-- (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
+-(void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
 	//Get touch location
 	UITouch *touch = [touches anyObject];
 	CGPoint tL = [touch locationInView:self];
@@ -96,7 +116,7 @@ DragWindow* selfVar = nil;
 	[dragView setNeedsDisplay];
 }
 
-- (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
+-(void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
 	//Get screenshot
     UIImage *screenImage = _UICreateScreenUIImage();
 
@@ -120,7 +140,7 @@ DragWindow* selfVar = nil;
     [self remove];
 }
 
-- (void)remove {
+-(void)remove {
     //Remove window from screen
     dragView.backgroundColor = [UIColor clearColor];
     [dragView removeFromSuperview];
@@ -135,7 +155,7 @@ DragWindow* selfVar = nil;
 
 @implementation DragView
 
-- (void)drawRect:(CGRect)rect {
+-(void)drawRect:(CGRect)rect {
     // Start by filling the area with the color
     [bgColor setFill];
     UIRectFill(rect);
@@ -151,3 +171,13 @@ DragWindow* selfVar = nil;
 }
 
 @end
+%end
+
+%ctor {
+    if(SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"8.0")) {
+        %init(iOS8);
+    }else {
+        %init(iOSOther);
+    }
+    %init(All);
+}
