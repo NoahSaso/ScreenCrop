@@ -120,12 +120,12 @@ DragWindow* selfVar = nil;
 	//Get screenshot
     UIImage *screenImage = _UICreateScreenUIImage();
 
-    //Double dimensions because of retina
+    //Scale dimensions because of retina
     CGRect cropRect = holeRect;
-    cropRect.origin.x += cropRect.origin.x;
-    cropRect.origin.y += cropRect.origin.y;
-    cropRect.size.width += cropRect.size.width;
-    cropRect.size.height += cropRect.size.height;
+    cropRect.origin.x *= [UIScreen mainScreen].scale;
+    cropRect.origin.y *= [UIScreen mainScreen].scale;
+    cropRect.size.width *= [UIScreen mainScreen].scale;
+    cropRect.size.height *= [UIScreen mainScreen].scale;
 
     //Crop screenshot to rect size
     CGImageRef imageRef = CGImageCreateWithImageInRect(screenImage.CGImage, cropRect);
